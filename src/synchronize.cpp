@@ -1,7 +1,10 @@
 #include "../include/helpers.hpp"
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <map>
+#include <openssl/sha.h>
 #include <vector>
 
 using std::cerr;
@@ -12,27 +15,49 @@ using std::vector;
 
 namespace fs = std::filesystem;
 
-vector<string> makeVector(const string &directory_path) {
-  vector<string> result;
-  for (const auto &file : fs::directory_iterator(directory_path)) {
-    result.push_back(file.path().filename().string());
+void copyFromSource(const std::map<string, string> &files_in_source,
+                    const std::map<string, string> &files_in_replica,
+                    const string &source_path, const string &replica_path) {
+  for (auto &file : files_in_source) {
+    auto it = files_in_replica.find(file.first);
+    if (it == files_in_replica.end()) {
+      copyFile(file.first, source_path, replica_path);
+    } else {
+      if (file.second != it->second) {
+        copyFile(file.first, source_path, replica_path);
+      }
+    }
   }
-  return result;
+}
+
+void deleteFromReplica(const std::map<string, string> &files_in_source,
+                       const std::map<string, string> &files_in_replica,
+                       const string &source_path, const string &replica_path) {
+  for (auto &file : files_in_replica) {
+    auto it = files_in_source.find(file.first);
+    if (it == files_in_source.end()) {
+      deleteFile(file.first, replica_path);
+    }
+  }
 }
 
 void sync(const string &source_path, const string &replica_path) {
 
-  vector<string> files_in_source = makeVector(source_path);
-  vector<string> files_in_replica = makeVector(replica_path);
+  std::map<string, string> files_in_source_with_hash;
+  std::map<string, string> files_in_replica_with_hash;
 
-  for (string file : files_in_source) {
-    auto it = std::find(files_in_replica.begin(), files_in_replica.end(), file);
-    if (it == files_in_replica.end()) {
-      copyFile(file, source_path, replica_path);
-    }
-  }
+  makeMapWithHash(files_in_source_with_hash, source_path);
+  //   makeMapWithHash(files_in_replica_with_hash, replica_path);
 
-  //   for (const auto &file : fs::directory_iterator(source_path)) {
-  // copyFile(file.path(), replica_path);
+  printMapPairs(files_in_source_with_hash);
+
+  //   std::ifstream file(source_path + "/test.txt"); // Replace with the actual
+  //   path std::string line; while (std::getline(file, line)) {
+  // std::cout << line << std::endl;
   //   }
+
+  //   copyFromSource(files_in_source_with_hash, files_in_replica_with_hash,
+  //  source_path, replica_path);
+  //   deleteFromReplica(files_in_source_with_hash, files_in_replica_with_hash,
+  // source_path, replica_path);
 }

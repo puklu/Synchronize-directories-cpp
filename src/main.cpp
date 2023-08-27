@@ -28,8 +28,8 @@ void schedule_sync(const boost::system::error_code & /*e*/,
 int main(int argc, char *argv[]) {
   std::map<std::string, std::string> arguments;
 
-  arguments["-srcdir"] = "../source_dir_default";
-  arguments["-repdir"] = "../replica_dir_default";
+  arguments["-srcdir"] = "source_dir_default";
+  arguments["-repdir"] = "replica_dir_default";
   arguments["-interval"] = "10";
 
   for (int i = 1; i < argc; i += 2) {

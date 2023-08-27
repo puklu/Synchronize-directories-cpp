@@ -43,21 +43,23 @@ void deleteFromReplica(const std::map<string, string> &files_in_source,
 
 void sync(const string &source_path, const string &replica_path) {
 
+  cout << "Synchronising...." << endl;
+
   std::map<string, string> files_in_source_with_hash;
   std::map<string, string> files_in_replica_with_hash;
 
   makeMapWithHash(files_in_source_with_hash, source_path);
-  //   makeMapWithHash(files_in_replica_with_hash, replica_path);
+  makeMapWithHash(files_in_replica_with_hash, replica_path);
 
-  printMapPairs(files_in_source_with_hash);
+  //   printMapPairs(files_in_source_with_hash);
 
   //   std::ifstream file(source_path + "/test.txt"); // Replace with the actual
   //   path std::string line; while (std::getline(file, line)) {
   // std::cout << line << std::endl;
   //   }
 
-  //   copyFromSource(files_in_source_with_hash, files_in_replica_with_hash,
-  //  source_path, replica_path);
-  //   deleteFromReplica(files_in_source_with_hash, files_in_replica_with_hash,
-  // source_path, replica_path);
+  copyFromSource(files_in_source_with_hash, files_in_replica_with_hash,
+                 source_path, replica_path);
+  deleteFromReplica(files_in_source_with_hash, files_in_replica_with_hash,
+                    source_path, replica_path);
 }

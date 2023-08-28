@@ -1,5 +1,6 @@
 #include "../include/helpers.hpp"
 #include <algorithm>
+#include <boost/asio.hpp>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -51,15 +52,26 @@ void sync(const string &source_path, const string &replica_path) {
   makeMapWithHash(files_in_source_with_hash, source_path);
   makeMapWithHash(files_in_replica_with_hash, replica_path);
 
-  //   printMapPairs(files_in_source_with_hash);
-
-  //   std::ifstream file(source_path + "/test.txt"); // Replace with the actual
-  //   path std::string line; while (std::getline(file, line)) {
-  // std::cout << line << std::endl;
-  //   }
+  // printMapPairs(files_in_source_with_hash);
+  // printMapPairs(files_in_replica_with_hash);
 
   copyFromSource(files_in_source_with_hash, files_in_replica_with_hash,
                  source_path, replica_path);
   deleteFromReplica(files_in_source_with_hash, files_in_replica_with_hash,
                     source_path, replica_path);
+}
+
+void schedule_sync(const boost::system::error_code & /*e*/,
+                   boost::asio::deadline_timer *t, const std::string &src_path,
+                   const std::string &replica_path, const int sync_interval) {
+
+  // Run synchronization task
+  sync(src_path, replica_path);
+
+  // Reschedule the task after the specified interval (e.g., 10 seconds)
+  t->expires_at(t->expires_at() + boost::posix_time::seconds(sync_interval));
+  t->async_wait([t, src_path, replica_path,
+                 sync_interval](const boost::system::error_code &error) {
+    schedule_sync(error, t, src_path, replica_path, sync_interval);
+  });
 }

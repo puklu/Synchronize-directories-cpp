@@ -21,10 +21,9 @@ void copyFile(const std::string &filename, const std::string &fromWhere,
   std::string filepath_in_replica = toWhere + "/" + filename;
 
   try {
-    // if (!fs::exists(filepath_in_replica)) {
-    fs::copy_file(filepath_in_source, filepath_in_replica);
-    cout << filename << " copied to " << toWhere << endl;
-    // }
+    fs::create_directories(fs::path(filepath_in_replica).parent_path());
+    fs::copy(filepath_in_source, filepath_in_replica);
+    cout << filepath_in_source << " copied to " << filepath_in_replica << endl;
   } catch (const fs::filesystem_error &e) {
     cerr << e.what() << endl;
   }
@@ -128,11 +127,29 @@ std::string calculateMD5(const std::string &filename) {
 }
 
 void makeMapWithHash(std::map<std::string, std::string> &mapWithHash,
-                     const std::string &directory_path) {
-  for (const auto &file : fs::directory_iterator(directory_path)) {
-    std::string name_of_file = file.path().filename().string();
-    std::string file_path = file.path().string();
+                     const std::string &directory_path,
+                     const std::string &current_relative_path = "") {
+  if (fs::exists(directory_path)) {
+    const std::string base_path =
+        current_relative_path.empty() ? directory_path : current_relative_path;
 
-    mapWithHash[name_of_file] = calculateMD5(file_path);
+    for (const auto &file : fs::directory_iterator(directory_path)) {
+
+      std::string file_path = file.path().string();
+
+      fs::path relative_path = fs::relative(file_path, base_path);
+
+      if (fs::is_regular_file(file)) {
+        mapWithHash[relative_path] = calculateMD5(file_path);
+
+      } else if (fs::is_directory(file) && !fs::is_empty(file)) {
+        makeMapWithHash(mapWithHash, file_path, base_path);
+
+      } else if (fs::is_empty(file)) {
+        mapWithHash[relative_path] = "";
+      }
+    }
+  } else {
+    cout << directory_path << " doesnt exist! Exiting!!" << endl;
   }
 }

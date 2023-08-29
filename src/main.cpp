@@ -1,6 +1,9 @@
+#include "../include/argument_parser.hpp"
+#include "../include/constants.hpp"
+#include "../include/directory_handler.hpp"
+#include "../include/loggers.hpp"
 #include "../include/synchronize.hpp"
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
@@ -10,32 +13,15 @@ using std::endl;
 namespace fs = std::filesystem;
 
 int main(int argc, char *argv[]) {
-  std::map<std::string, std::string> arguments;
+  std::map<std::string, std::string> arguments = parseArguments(argc, argv);
 
-  arguments["-srcdir"] = "source_dir_default";
-  arguments["-repdir"] = "replica_dir_default";
-  arguments["-interval"] = "10";
+  welcomeMessage();
 
-  for (int i = 1; i < argc; i += 2) {
-    std::string arg = argv[i];
-    std::string value = argv[i + 1];
-    arguments[arg] = value;
-    // cout << arg << "  " << value << endl;
-  }
+  checkIfSourceDirectoryValid(arguments);
 
-  // check if source directory exists
-  if (!fs::exists(arguments["-srcdir"])) {
-    cout << "Source directory doesnt exist! Please enter a valid path to "
-            "source directory."
-         << endl;
-    return 1;
-  }
+  displayDirectoriesBeingUsed(arguments);
 
-  // make replica dir if it doesnt exist
-  if (!fs::exists(arguments["-repdir"])) {
-    fs::create_directory(arguments["-repdir"]);
-    cout << arguments["-repdir"] << " directory created." << endl;
-  }
+  createReplicaDirectoryIfNotExists(arguments);
 
   boost::asio::io_service io;
   boost::asio::deadline_timer t(io, boost::posix_time::seconds(0));

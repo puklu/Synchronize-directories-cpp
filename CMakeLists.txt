@@ -18,6 +18,10 @@ set(SOURCES
     src/main.cpp
     src/synchronize.cpp
     src/helpers.cpp
+    src/constants.cpp
+    src/argument_parser.cpp
+    src/directory_handler.cpp
+    src/loggers.cpp
 )
 
 # add_library(sync src/synchronize.cpp)
